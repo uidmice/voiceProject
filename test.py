@@ -7,7 +7,6 @@ chans=1
 samp_rate = 8000
 chunk = 4096
 record_secs = 4    #record time
-dev_index = 1
 wav_output_filename = 'test1.wav'
 
 

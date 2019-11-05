@@ -14,7 +14,15 @@ def train_speaker(name, *args):
     recog.speaker_name = name
     if(len(args)==1):
         recog.train_new_data(args[0])
+    else:
+        recog.train_new_data()
 
-train_speaker(args.name)
+    print recog.get_speakers()
 
-print recog.get_speakers()
+name = args.name.lower()
+if args.f is not None:
+    train_speaker(name, args.f)
+else:
+    train_speaker(name)
+print name
+
