@@ -7,11 +7,13 @@ chans=1
 samp_rate = 8000
 chunk = 4096
 record_secs = 4    #record time
-dev_index = 1
 wav_output_filename = 'test1.wav'
 
 
 audio = pyaudio.PyAudio()
+
+for ii in range (audio.get_device_count()):
+    print audio.get_device_info_by_index(ii).get('name')
 
 #setup audio input stream
 stream=audio.open(format = form_1,rate=samp_rate,channels=chans, input=True, frames_per_buffer=chunk)
