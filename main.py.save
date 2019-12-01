@@ -22,6 +22,19 @@ class MyPorcupine(Thread):
             input_device_index=None,
             output_path=None):
 
+        """
+        Constructor.
+        :param library_path: Absolute path to Porcupine's dynamic library.
+        :param model_file_path: Absolute path to the model parameter file.
+        :param keyword_file_paths: List of absolute paths to keyword files.
+        :param sensitivities: Sensitivity parameter for each wake word. For more information refer to
+        'include/pv_porcupine.h'. It uses the
+        same sensitivity value for all keywords.
+        :param input_device_index: Optional argument. If provided, audio is recorded from this input device. Otherwise,
+        the default audio input device is used.
+        :param output_path: If provided recorded audio will be stored in this location at the end of the run.
+        """
+
         super(MyPorcupine, self).__init__()
 
         self._library_path = library_path
@@ -116,11 +129,10 @@ class MyPorcupine(Thread):
 def main():
     MyPorcupine.show_audio_devices_info()
     MyPorcupine(
-        library_path="porcupine/lib/raspberry-pi/cortex-a53/libpv_porcupine.so",
+        library_path="porcupine/lib/raspberry-pi/cortex-a53",
         keyword_file_paths=["porcupine/resources/keyword_files/raspberrypi/hey pico_raspberrypi.ppn"],
         sensitivities=[1.0],
         input_device_index=5,
-        output_path="./temp.wav",
         model_file_path="porcupine/lib/common/porcupine_params.pv").run()
 
 if __name__=="__main__":
