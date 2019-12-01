@@ -129,7 +129,7 @@ class MyPorcupine(Thread):
 def main():
     MyPorcupine.show_audio_devices_info()
     MyPorcupine(
-        library_path="porcupine/lib/raspberry-pi/cortex-a53/libpv_porcupine.so",
+        library_path="porcupine/lib/raspberry-pi/cortex-a53",
         keyword_file_paths=["porcupine/resources/keyword_files/raspberrypi/hey pico_raspberrypi.ppn"],
         sensitivities=[1.0],
         input_device_index=5,
