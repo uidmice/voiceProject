@@ -125,9 +125,7 @@ class MyPorcupine(Thread):
 
 def main():
     MyPorcupine.show_audio_devices_info()
-    PorcupineDemo(
-        library_path=args.library_path, 
-        model_file_path=args.model_file_path, 
-        keyword_file_paths=keyword_file_paths, 
-        sensitivities=sensitivities, output_path=args.output_path, 
-        input_device_index=args.input_audio_device_index).run()
+
+
+if __name__ == '__main__':
+    main()
