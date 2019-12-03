@@ -37,25 +37,19 @@ status = 0 # 0: idle, 1: keyword detected, 2: CMD1 detected, 3: CMD2 detected, 4
 
 def timer_callback():
     global status
-    global timer
-    print("5 seconds\n")
-    print("Status: %i changed to 0\n" %status)
     status = 0
 
 def cmd1():
-    print("CMD1: %s\n" %CMD1)
+    print("CMD1: %s" %CMD1)
 
 def cmd2():
-    print("CMD2: %s\n" %CMD2)
+    print("CMD2: %s" %CMD2)
 
 def cmd3():
-    print("CMD3: %s\n" %CMD3)
-
-    
-timer = Timer(10.0, timer_callback)
+    print("CMD3: %s" %CMD3)
 
 
-       
+
 class MyPorcupine(Thread):
 
     def __init__(
@@ -117,41 +111,42 @@ class MyPorcupine(Thread):
                     self._recorded_frames.append(pcm)
 
                 result = porcupine.process(pcm)
-                
+
                 if status ==0:
                     if result == 0: #wake word detected
-                        print('[%s] detected %s' % (str(datetime.now()), keyword_names[result]))
-                        print("Status: %i changed to 1" %status)
+                        print('detected %s' % ( keyword_names[result]))
                         status = 1
                         timer = Timer(10.0, timer_callback)
                         timer.start()
+                        if self._output_path is not None and len(self._recorded_frames) > 0:
+                            recorded_audio = np.concatenate(self._recorded_frames, axis=0).astype(np.int16)
+                            self._recorded_frames = []
+                            soundfile.write(self._output_path, recorded_audio, samplerate=porcupine.sample_rate, subtype='PCM_16')
                         continue
-                
+
                 if status == 1:
                     if result > 0:
-                        print('[%s] detected %s' % (str(datetime.now()), keyword_names[result]))
-                        print("Status: %i changed to %i" %(status, result+1))
+                        print('detected %s' % ( keyword_names[result]))
                         status = result + 1
 
                 if status == 2:
+                    timer.cancel()
                     cmd1()
-                    print("Status: %i changed to 0" %(status))
                     status = 0
-                    timer.cancel()
-                    
+
+
                 if status == 3:
+                    timer.cancel()
                     cmd2()
-                    print("Status: %i changed to 0" %(status))
                     status = 0
-                    timer.cancel()
-                
+
                 if status == 4:
-                    cmd3()
-                    print("Status: %i changed to 0" %(status))
-                    status = 0
                     timer.cancel()
-                
-                
+                    cmd3()
+                    status = 0
+
+
+
 
         except KeyboardInterrupt:
             print('stopping ...')
