@@ -29,13 +29,15 @@ S3 ="porcupine/resources/keyword_files/raspberrypi/" + CMD2 + "_raspberrypi.ppn"
 S4 ="porcupine/resources/keyword_files/raspberrypi/" + CMD3 + "_raspberrypi.ppn"
 
 KEYWORD_FILE_PATHS = [S1, S2, S3, S4]
-SENSITIVITIES = [1.0, 0.7, 0.7, 0.7]
+SENSITIVITIES = [1.0, 1.0, 1.0, 1.0]
 OUTPUT_PATH = "./temp.wav"
 
 status = 0 # 0: idle, 1: keyword detected, 2: CMD1 detected, 3: CMD2 detected, 4: CMD3 detected
 
 
 def timer_callback():
+    global status
+    global timer
     print("5 seconds\n")
     print("Status: %i changed to 0\n" %status)
     status = 0
@@ -50,7 +52,7 @@ def cmd3():
     print("CMD3: %s\n" %CMD3)
 
     
-timer = Timer(5.0, timer_callback)
+timer = Timer(10.0, timer_callback)
 
 
        
@@ -76,7 +78,7 @@ class MyPorcupine(Thread):
         self._recorded_frames = []
 
     def run(self):
-
+        global status
         num_keywords = len(self._keyword_file_paths)
 
         keyword_names = list()
@@ -121,8 +123,9 @@ class MyPorcupine(Thread):
                         print('[%s] detected %s' % (str(datetime.now()), keyword_names[result]))
                         print("Status: %i changed to 1" %status)
                         status = 1
+                        timer = Timer(10.0, timer_callback)
                         timer.start()
-                        break
+                        continue
                 
                 if status == 1:
                     if result > 0:
