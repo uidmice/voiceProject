@@ -1,9 +1,13 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import os
 import platform
 import struct
 import sys
 from datetime import datetime
 from threading import Thread
+from threading import Timer
 
 import numpy as np
 import pyaudio
@@ -11,16 +15,55 @@ import soundfile
 
 from porcupine import Porcupine
 
+WAKE_WORD = "hey pico"
+CMD1 = "terminator"
+CMD2 = "blueberry"
+CMD3 = "picovoice"
+LIBRARY_PATH = "porcupine/lib/raspberry-pi/cortex-a53/libpv_porcupine.so"
+MODEL_FILE_PATH = "porcupine/lib/common/porcupine_params.pv"
+INPUT_DEVICE_INDEX = 5
+
+S1 ="porcupine/resources/keyword_files/raspberrypi/" + WAKE_WORD + "_raspberrypi.ppn"
+S2 ="porcupine/resources/keyword_files/raspberrypi/" + CMD1 + "_raspberrypi.ppn"
+S3 ="porcupine/resources/keyword_files/raspberrypi/" + CMD2 + "_raspberrypi.ppn"
+S4 ="porcupine/resources/keyword_files/raspberrypi/" + CMD3 + "_raspberrypi.ppn"
+
+KEYWORD_FILE_PATHS = [S1, S2, S3, S4]
+SENSITIVITIES = [1.0, 0.7, 0.7, 0.7]
+OUTPUT_PATH = "./temp.wav"
+
+status = 0 # 0: idle, 1: keyword detected, 2: CMD1 detected, 3: CMD2 detected, 4: CMD3 detected
+
+
+def timer_callback():
+    print("5 seconds\n")
+    print("Status: %i changed to 0\n" %status)
+    status = 0
+
+def cmd1():
+    print("CMD1: %s\n" %CMD1)
+
+def cmd2():
+    print("CMD2: %s\n" %CMD2)
+
+def cmd3():
+    print("CMD3: %s\n" %CMD3)
+
+    
+timer = Timer(5.0, timer_callback)
+
+
+       
 class MyPorcupine(Thread):
 
     def __init__(
             self,
-            library_path,
-            model_file_path,
-            keyword_file_paths,
-            sensitivities,
-            input_device_index=None,
-            output_path=None):
+            library_path=LIBRARY_PATH,
+            model_file_path=MODEL_FILE_PATH,
+            keyword_file_paths=KEYWORD_FILE_PATHS,
+            sensitivities=SENSITIVITIES,
+            input_device_index=INPUT_DEVICE_INDEX,
+            output_path=OUTPUT_PATH):
 
         super(MyPorcupine, self).__init__()
 
@@ -29,17 +72,10 @@ class MyPorcupine(Thread):
         self._keyword_file_paths = keyword_file_paths
         self._sensitivities = sensitivities
         self._input_device_index = input_device_index
-
         self._output_path = output_path
-        if self._output_path is not None:
-            self._recorded_frames = []
+        self._recorded_frames = []
 
     def run(self):
-        """
-         Creates an input audio stream, initializes wake word detection (Porcupine) object, and monitors the audio
-         stream for occurrences of the wake word(s). It prints the time of detection for each occurrence and index of
-         wake word.
-         """
 
         num_keywords = len(self._keyword_file_paths)
 
@@ -60,7 +96,8 @@ class MyPorcupine(Thread):
                 model_file_path=self._model_file_path,
                 keyword_file_paths=self._keyword_file_paths,
                 sensitivities=self._sensitivities)
-
+            print("sample rate: "+ str(porcupine.sample_rate) + "\n")
+            print("frame length: "+ str(porcupine.frame_length) + "\n")
             pa = pyaudio.PyAudio()
             audio_stream = pa.open(
                 rate=porcupine.sample_rate,
@@ -74,14 +111,44 @@ class MyPorcupine(Thread):
                 pcm = audio_stream.read(porcupine.frame_length)
                 pcm = struct.unpack_from("h" * porcupine.frame_length, pcm)
 
-                if self._output_path is not None:
+                if self._output_path is not None and status == 0:
                     self._recorded_frames.append(pcm)
 
                 result = porcupine.process(pcm)
-                if num_keywords == 1 and result:
-                    print('[%s] detected keyword' % str(datetime.now()))
-                elif num_keywords > 1 and result >= 0:
-                    print('[%s] detected %s' % (str(datetime.now()), keyword_names[result]))
+                
+                if status ==0:
+                    if result == 0: #wake word detected
+                        print('[%s] detected %s' % (str(datetime.now()), keyword_names[result]))
+                        print("Status: %i changed to 1" %status)
+                        status = 1
+                        timer.start()
+                        break
+                
+                if status == 1:
+                    if result > 0:
+                        print('[%s] detected %s' % (str(datetime.now()), keyword_names[result]))
+                        print("Status: %i changed to %i" %(status, result+1))
+                        status = result + 1
+
+                if status == 2:
+                    cmd1()
+                    print("Status: %i changed to 0" %(status))
+                    status = 0
+                    timer.cancel()
+                    
+                if status == 3:
+                    cmd2()
+                    print("Status: %i changed to 0" %(status))
+                    status = 0
+                    timer.cancel()
+                
+                if status == 4:
+                    cmd3()
+                    print("Status: %i changed to 0" %(status))
+                    status = 0
+                    timer.cancel()
+                
+                
 
         except KeyboardInterrupt:
             print('stopping ...')
@@ -115,13 +182,7 @@ class MyPorcupine(Thread):
 
 def main():
     MyPorcupine.show_audio_devices_info()
-    MyPorcupine(
-        library_path="porcupine/lib/raspberry-pi/cortex-a53/libpv_porcupine.so",
-        keyword_file_paths=["porcupine/resources/keyword_files/raspberrypi/hey pico_raspberrypi.ppn"],
-        sensitivities=[1.0],
-        input_device_index=5,
-        output_path="./temp.wav",
-        model_file_path="porcupine/lib/common/porcupine_params.pv").run()
+    MyPorcupine().run()
 
 if __name__=="__main__":
     main()
