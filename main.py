@@ -106,6 +106,7 @@ class MyPorcupine(Thread):
                 input=True,
                 frames_per_buffer=porcupine.frame_length,
                 input_device_index=self._input_device_index)
+            i = 0
 
             while True:
                 pcm = audio_stream.read(porcupine.frame_length)
@@ -123,7 +124,9 @@ class MyPorcupine(Thread):
                         timer = Timer(10.0, timer_callback)
                         timer.start()
                         if self._output_path is not None and len(self._recorded_frames) > 0:
-                            storeProcess = Process(target=storeFile, args=(self._output_path,self._recorded_frames, porcupine.sample_rate))
+                            s = self._output_path + str(i)
+                            i += 1
+                            storeProcess = Process(target=storeFile, args=(s,self._recorded_frames, porcupine.sample_rate))
                             storeProcess.start()
                             self._recorded_frames = []
                         continue
