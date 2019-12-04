@@ -53,7 +53,8 @@ def cmd3():
 def storeFile(frames, i, sample_rate):
     recorded_audio = np.concatenate(frames, axis=0).astype(np.int16)
     filename = "./tem" + str(i) + ".wav"
-    soundfile.write(filename, recorded_audio, samplerate=sample_rate, subtype='PCM_16')
+    print (len(recorded_audio))
+    soundfile.write(filename, recorded_audio[-sample_rate*2:][:], samplerate=sample_rate, subtype='PCM_16')
 
 class MyPorcupine(Thread):
 
