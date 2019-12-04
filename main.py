@@ -111,7 +111,7 @@ class MyPorcupine(Thread):
             i = 0
 
             while True:
-                pcm = audio_stream.read(porcupine.frame_length)
+                pcm = audio_stream.read(porcupine.frame_length, exception_on_overflow = False)
                 pcm = struct.unpack_from("h" * porcupine.frame_length, pcm)
 
                 if self._output_path is not None and status == 0:
