@@ -48,7 +48,9 @@ def cmd2():
 def cmd3():
     print("CMD3: %s" %CMD3)
 
-
+def save_audio(fram, output_p):
+    recorded_audio = np.concatenate(fram, axis=0).astype(np.int16)
+    soundfile.write(output_p, recorded_audio, samplerate=porcupine.sample_rate, subtype='PCM_16')
 
 class MyPorcupine(Thread):
 
@@ -119,9 +121,10 @@ class MyPorcupine(Thread):
                         timer = Timer(10.0, timer_callback)
                         timer.start()
                         if self._output_path is not None and len(self._recorded_frames) > 0:
-                            recorded_audio = np.concatenate(self._recorded_frames, axis=0).astype(np.int16)
                             self._recorded_frames = []
-                            soundfile.write(self._output_path, recorded_audio, samplerate=porcupine.sample_rate, subtype='PCM_16')
+                            d = threading.Thread(target=save_audio, args=(self._recorded_frames, self._output_path))
+	                        d.setDaemon(True)
+                            d.start()
                         continue
 
                 if status == 1:
