@@ -50,8 +50,9 @@ def cmd2():
 def cmd3():
     print("CMD3: %s" %CMD3)
 
-def storeFile(filename,frames, sample_rate):
+def storeFile(frames, i, sample_rate):
     recorded_audio = np.concatenate(frames, axis=0).astype(np.int16)
+    filename = "./tem" + str(i) + ".wav"
     soundfile.write(filename, recorded_audio, samplerate=sample_rate, subtype='PCM_16')
 
 class MyPorcupine(Thread):
@@ -124,9 +125,8 @@ class MyPorcupine(Thread):
                         timer = Timer(10.0, timer_callback)
                         timer.start()
                         if self._output_path is not None and len(self._recorded_frames) > 0:
-                            s = self._output_path + str(i)
                             i += 1
-                            storeProcess = Process(target=storeFile, args=(s,self._recorded_frames, porcupine.sample_rate))
+                            storeProcess = Process(target=storeFile, args=(self._recorded_frames, i, porcupine.sample_rate))
                             storeProcess.start()
                             self._recorded_frames = []
                         continue
