@@ -8,6 +8,8 @@ import sys
 from datetime import datetime
 from threading import Thread
 from threading import Timer
+from multiprocessing import Process
+
 
 import numpy as np
 import pyaudio
@@ -48,9 +50,9 @@ def cmd2():
 def cmd3():
     print("CMD3: %s" %CMD3)
 
-def save_audio(fram, output_p):
-    recorded_audio = np.concatenate(fram, axis=0).astype(np.int16)
-    soundfile.write(output_p, recorded_audio, samplerate=porcupine.sample_rate, subtype='PCM_16')
+def storeFile(filename,frames):
+    recorded_audio = np.concatenate(frames, axis=0).astype(np.int16)
+    soundfile.write(filename, recorded_audio, samplerate=porcupine.sample_rate, subtype='PCM_16')
 
 class MyPorcupine(Thread):
 
@@ -121,10 +123,9 @@ class MyPorcupine(Thread):
                         timer = Timer(10.0, timer_callback)
                         timer.start()
                         if self._output_path is not None and len(self._recorded_frames) > 0:
+                            storeProcess = Process(target=storeFile, args=(self._output_path,self._recorded_frames))
+                            storeProcess.start()
                             self._recorded_frames = []
-                            d = threading.Thread(target=save_audio, args=(self._recorded_frames, self._output_path))
-	                        d.setDaemon(True)
-                            d.start()
                         continue
 
                 if status == 1:
