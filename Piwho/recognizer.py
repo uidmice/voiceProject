@@ -5,7 +5,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("recording", help="file for speaker recognition")
 args = parser.parse_args()
 
-test_path_dir = "/home/pi/Projects/voiceProject/models/testing/"
+test_path_dir = "/home/pi/Projects/voiceProject/"
 recog =recognition.SpeakerRecognizer()
 name =[]
 name = recog.identify_speaker('{0}{1}'.format(test_path_dir,args.recording))

@@ -5,10 +5,10 @@ import os
 import platform
 import struct
 import sys
-from datetime import datetime
 from threading import Thread
 from threading import Timer
 from multiprocessing import Process
+import subprocess
 
 
 import numpy as np
@@ -36,10 +36,12 @@ OUTPUT_PATH = "./temp.wav"
 
 status = 0 # 0: idle, 1: keyword detected, 2: CMD1 detected, 3: CMD2 detected, 4: CMD3 detected
 
-
-def timer_callback():
+def timer_callback(idx):
     global status
     status = 0
+    process = subprocess.Popen(['python', './Piwho/recognizer.py ' +"./tem" + str(idx) + ".wav" ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = process.communicate()
+    print(stdout)
 
 def cmd1():
     print("CMD1: %s" %CMD1)
@@ -53,8 +55,15 @@ def cmd3():
 def storeFile(frames, i, sample_rate):
     recorded_audio = np.concatenate(frames, axis=0).astype(np.int16)
     filename = "./tem" + str(i) + ".wav"
-    print (len(recorded_audio))
     soundfile.write(filename, recorded_audio[-sample_rate*2:][:], samplerate=sample_rate, subtype='PCM_16')
+
+def myPrint(s):
+    print (s)
+
+def say(s):
+    p = Process(target=myPrint, args=(s,))
+    p.start()
+
 
 class MyPorcupine(Thread):
 
@@ -121,37 +130,36 @@ class MyPorcupine(Thread):
 
                 if status ==0:
                     if result == 0: #wake word detected
-                        print('detected %s' % ( keyword_names[result]))
+                        say("What's up, master?" )
                         status = 1
-                        timer = Timer(10.0, timer_callback)
+                        timer = Timer(10.0, timer_callback, (i,))
+                        timer.daemon = True
                         timer.start()
                         if self._output_path is not None and len(self._recorded_frames) > 0:
-                            i += 1
                             storeProcess = Process(target=storeFile, args=(self._recorded_frames, i, porcupine.sample_rate))
                             storeProcess.start()
                             self._recorded_frames = []
+                            i += 1
                         continue
 
                 if status == 1:
                     if result > 0:
-                        print('detected %s' % ( keyword_names[result]))
                         status = result + 1
 
                 if status == 2:
                     timer.cancel()
-                    cmd1()
                     status = 0
-
+                    say("I'd love to watch TERMINATOR again! ")
 
                 if status == 3:
                     timer.cancel()
-                    cmd2()
                     status = 0
+                    say("I don't have any blueberries.")
 
                 if status == 4:
                     timer.cancel()
-                    cmd3()
                     status = 0
+                    say("Hey pico <3")
 
 
 
@@ -167,10 +175,6 @@ class MyPorcupine(Thread):
 
             if pa is not None:
                 pa.terminate()
-
-            if self._output_path is not None and len(self._recorded_frames) > 0:
-                recorded_audio = np.concatenate(self._recorded_frames, axis=0).astype(np.int16)
-                soundfile.write(self._output_path, recorded_audio, samplerate=porcupine.sample_rate, subtype='PCM_16')
 
     _AUDIO_DEVICE_INFO_KEYS = ['index', 'name', 'defaultSampleRate', 'maxInputChannels']
 
