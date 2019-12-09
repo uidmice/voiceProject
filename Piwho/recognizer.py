@@ -8,5 +8,7 @@ args = parser.parse_args()
 test_path_dir = "/home/pi/voiceProject/"
 recog =recognition.SpeakerRecognizer()
 name =[]
-name = recog.identify_speaker('{0}{1}'.format(test_path_dir,args.recording))
+file = '{0}{1}'.format(test_path_dir,args.recording)
+print file
+name = recog.identify_speaker(file)
 print name[0]

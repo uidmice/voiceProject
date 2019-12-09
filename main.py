@@ -133,7 +133,7 @@ class MyPorcupine(Thread):
                     if result == 0: #wake word detected
                         say("What's up, master?" )
                         status = 1
-                        timer = Timer(10.0, timer_callback, (i,))
+                        timer = Timer(8.0, timer_callback, (i,))
                         timer.daemon = True
                         timer.start()
                         if self._output_path is not None and len(self._recorded_frames) > 0:
